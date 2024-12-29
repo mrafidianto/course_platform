@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.text import slugify
 
 """
 - Courses:
@@ -25,12 +26,19 @@ class PublishStatus(models.TextChoices):
     DRAFT = 'draft', 'Draft'
 
 def handle_upload(instance, filename):
-    return f'{filename}'
+    slug_title = slugify(instance.title)
+    return f'course_image/{slug_title}/{filename}'
 
 class Courses(models.Model):
+
+    class Meta:
+        db_table = 'courses'
+        verbose_name = 'Courses'
+        verbose_name_plural = 'Courses'
+
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    image = models.ImageField()
+    image = models.ImageField(upload_to=handle_upload, null=True)
     access = models.CharField(max_length=14, choices=AccessRequirements.choices, default=AccessRequirements.EMAIL_REQUIRED)
     status = models.CharField(max_length=10, choices=PublishStatus.choices, default=PublishStatus.DRAFT)
 

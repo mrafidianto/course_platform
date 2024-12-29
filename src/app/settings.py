@@ -11,10 +11,30 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+import environ
+
+# check if the local
+env = environ.Env(
+    DEBUG=(bool, False),
+    DB_NAME=(str, ''),
+    DB_USER=(str, ''),
+    DB_PASSWORD=(str, ''),
+    DB_HOST=(str, ''),
+    DB_PORT=(str, ''),
+    S3_ENDPOINT_URL=(str, ''),
+    S3_ACCESS_KEY=(str, ''),
+    S3_SECRET_KEY=(str, ''),
+    S3_BUCKET_NAME=(str, ''),
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+print("BASE_DIR", BASE_DIR)
+# Load the .env file
+env_file = os.path.join(BASE_DIR.parent, '.env')
+if os.path.exists(env_file):
+    environ.Env.read_env(env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -27,7 +47,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,6 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'courses',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -77,11 +97,11 @@ WSGI_APPLICATION = 'app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'course_platform',
-        'USER': 'dev',
-        'PASSWORD': 'dev',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
     }
 }
 
@@ -117,12 +137,33 @@ USE_I18N = True
 USE_TZ = True
 
 
+LOCAL_CDN = BASE_DIR.parent / 'local-cdn'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = LOCAL_CDN / 'static'
+
+# Media files
+MEDIA_URL = 'media/'
+MEDIA_ROOT = LOCAL_CDN / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "access_key":env('S3_ACCESS_KEY'),
+            "secret_key": env('S3_SECRET_KEY'),
+            "bucket_name": env('S3_BUCKET_NAME'),
+            "endpoint_url": env('S3_ENDPOINT_URL'),
+        }
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    }
+}
