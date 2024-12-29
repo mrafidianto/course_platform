@@ -7,4 +7,9 @@ wheels/
 *.egg-info
 
 # Virtual environments
+.env
 .venv
+
+# local cdn
+/local-cdn/media
+/local-cdn/static
